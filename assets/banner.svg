@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f2937" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#111827" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="180" cy="140" r="280" fill="#6366f1" opacity="0.16" filter="blur(70px)"/>
+  <circle cx="1020" cy="480" r="300" fill="#06b6d4" opacity="0.14" filter="blur(70px)"/>
+
+  <!-- Title & Subtitle -->
+  <text x="600" y="75" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="36" font-weight="900" fill="#ffffff" letter-spacing="-0.02em">
+    AI PDF Chatbot
+  </text>
+  <text x="600" y="112" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#94a3b8">
+    Retrieval-Augmented Generation (RAG) &amp; Intelligent Document Question Answering
+  </text>
+
+  <!-- Technology Badges -->
+  <g transform="translate(600, 150)">
+    <rect x="-260" y="-14" width="100" height="28" rx="14" fill="#1f2937" stroke="#374151"/>
+    <text x="-210" y="4" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#38bdf8">PYTHON 3.12</text>
+
+    <rect x="-145" y="-14" width="105" height="28" rx="14" fill="#1f2937" stroke="#374151"/>
+    <text x="-92" y="4" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#ff4b4b">STREAMLIT</text>
+
+    <rect x="-25" y="-14" width="115" height="28" rx="14" fill="#1f2937" stroke="#374151"/>
+    <text x="32" y="4" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#a78bfa">GEMINI &amp; OPENAI</text>
+
+    <rect x="105" y="-14" width="85" height="28" rx="14" fill="#1f2937" stroke="#374151"/>
+    <text x="147" y="4" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#34d399">LANGCHAIN</text>
+
+    <rect x="205" y="-14" width="60" height="28" rx="14" fill="#1f2937" stroke="#374151"/>
+    <text x="235" y="4" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#facc15">FAISS</text>
+  </g>
+
+  <!-- Architecture Flow Pipeline Box -->
+  <g transform="translate(150, 185)">
+    <rect width="900" height="54" rx="12" fill="#111827" stroke="#374151"/>
+    
+    <text x="60" y="32" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">📄 PDF Upload</text>
+    <text x="140" y="32" font-family="sans-serif" font-size="12" fill="#6366f1">→</text>
+    
+    <text x="230" y="32" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">✂️ Chunking</text>
+    <text x="310" y="32" font-family="sans-serif" font-size="12" fill="#6366f1">→</text>
+    
+    <text x="420" y="32" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">🧬 Embeddings &amp; Vectors</text>
+    <text x="530" y="32" font-family="sans-serif" font-size="12" fill="#6366f1">→</text>
+    
+    <text x="640" y="32" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#e2e8f0">🎯 Similarity Search</text>
+    <text x="740" y="32" font-family="sans-serif" font-size="12" fill="#6366f1">→</text>
+    
+    <text x="830" y="32" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#34d399">💡 Cited Answer</text>
+  </g>
+
+  <!-- Interactive Mockup Screen Card -->
+  <g transform="translate(150, 255)" filter="url(#shadow)">
+    <!-- App Window Frame -->
+    <rect width="900" height="340" rx="16" fill="#ffffff"/>
+    <rect width="900" height="38" rx="16" fill="#f8fafc"/>
+    <line x1="0" y1="38" x2="900" y2="38" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <!-- Window Controls -->
+    <circle cx="20" cy="19" r="5" fill="#ef4444"/>
+    <circle cx="36" cy="19" r="5" fill="#f59e0b"/>
+    <circle cx="52" cy="19" r="5" fill="#10b981"/>
+    <text x="450" y="24" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#64748b">AI PDF Chatbot • Streamlit RAG Engine</text>
+
+    <!-- Sidebar Inside Mockup -->
+    <rect x="0" y="38" width="240" height="302" fill="#f8fafc"/>
+    <line x1="240" y1="38" x2="240" y2="340" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="20" y="66" font-family="sans-serif" font-size="13" font-weight="800" fill="#1e293b">Settings &amp; Docs</text>
+    
+    <rect x="20" y="80" width="200" height="32" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="32" y="101" font-family="sans-serif" font-size="11" fill="#334155">Provider: Google Gemini</text>
+
+    <!-- Upload Indicator -->
+    <rect x="20" y="124" width="200" height="52" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-dasharray="3,3"/>
+    <text x="120" y="148" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="600" fill="#3b82f6">📄 research_paper.pdf</text>
+    <text x="120" y="164" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#64748b">18 Pages • 42 Chunks Indexed</text>
+
+    <!-- Hyperparameters -->
+    <text x="20" y="196" font-family="sans-serif" font-size="10" font-weight="700" fill="#64748b">RAG CONFIG</text>
+    <text x="20" y="214" font-family="sans-serif" font-size="10" fill="#475569">Chunk Size: 1,000 chars</text>
+    <text x="20" y="230" font-family="sans-serif" font-size="10" fill="#475569">Chunk Overlap: 150 chars</text>
+    <text x="20" y="246" font-family="sans-serif" font-size="10" fill="#475569">Top-K Chunks: 4</text>
+
+    <!-- Main Content Area Inside Mockup -->
+    <text x="265" y="70" font-family="sans-serif" font-size="16" font-weight="800" fill="#4f46e5">Ask Your PDF 📄</text>
+
+    <!-- User Chat Message Bubble -->
+    <g transform="translate(265, 85)">
+      <rect x="240" y="0" width="375" height="34" rx="12" fill="#6366f1"/>
+      <text x="254" y="21" font-family="sans-serif" font-size="11" font-weight="500" fill="#ffffff">What are the primary findings presented in Section 3?</text>
+    </g>
+
+    <!-- Assistant Chat Message Bubble with Source Citation -->
+    <g transform="translate(265, 130)">
+      <rect x="0" y="0" width="615" height="92" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="16" y="24" font-family="sans-serif" font-size="11" font-weight="700" fill="#4f46e5">AI Document Assistant:</text>
+      <text x="16" y="44" font-family="sans-serif" font-size="11" fill="#1e293b">Based on Section 3, the study observed a 28% increase in retrieval precision</text>
+      <text x="16" y="60" font-family="sans-serif" font-size="11" fill="#1e293b">when combining overlapping text chunks with dense vector embeddings.</text>
+      
+      <!-- Source citation box -->
+      <rect x="16" y="68" width="580" height="18" rx="4" fill="#e0e7ff"/>
+      <text x="24" y="81" font-family="sans-serif" font-size="9" font-weight="600" fill="#4338ca">🔍 Verified Excerpt: Page 7, Paragraph 2 [Relevance: 0.89]</text>
+    </g>
+
+    <!-- Follow up user message -->
+    <g transform="translate(265, 232)">
+      <rect x="360" y="0" width="255" height="32" rx="12" fill="#6366f1"/>
+      <text x="372" y="20" font-family="sans-serif" font-size="11" font-weight="500" fill="#ffffff">Summarize the methodology in 3 bullet points.</text>
+    </g>
+
+    <!-- Input Box Inside Mockup -->
+    <rect x="265" y="278" width="615" height="38" rx="19" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="285" y="302" font-family="sans-serif" font-size="11" fill="#94a3b8">Ask a question about the document...</text>
+    <circle cx="862" cy="297" r="13" fill="#6366f1"/>
+    <polygon points="858,291 870,297 858,303" fill="#ffffff"/>
+  </g>
+</svg>
