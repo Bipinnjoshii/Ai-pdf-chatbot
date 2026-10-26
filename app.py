@@ -203,7 +203,11 @@ with st.sidebar:
     
     # API Key retrieval
     if provider == "Google Gemini":
-        env_key = os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API")
+        env_key = (
+            os.getenv("GEMINI_API_KEY")
+            or os.getenv("GEMINI_API")
+            or (st.secrets["GEMINI_API_KEY"] if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets else "")
+        )
         api_key = st.text_input(
             "Gemini API Key",
             value=env_key if env_key else "",
@@ -212,7 +216,10 @@ with st.sidebar:
         )
         model_name = st.selectbox("Model", ["gemini-1.5-flash", "gemini-1.5-pro"])
     else:
-        env_key = os.getenv("OPENAI_API_KEY")
+        env_key = (
+            os.getenv("OPENAI_API_KEY")
+            or (st.secrets["OPENAI_API_KEY"] if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets else "")
+        )
         api_key = st.text_input(
             "OpenAI API Key",
             value=env_key if env_key else "",
