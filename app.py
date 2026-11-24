@@ -540,35 +540,32 @@ def simple_semantic_search(query, chunks, top_k=4):
 
 @st.cache_data(ttl=300, show_spinner=False)
 def fetch_available_gemini_models(api_key):
-    defaults = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    # Modern active models in Google Gemini API
+    defaults = [
+        "gemini-3-flash-preview",
+        "gemini-flash-latest",
+        "gemini-3.8-flash",
+        "gemini-3.5-flash",
+        "gemini-3.6-flash",
+        "gemini-3.1-pro-preview",
+        "gemini-pro-latest"
+    ]
     if not api_key:
         return defaults
-    try:
-        from google import genai
-        client = genai.Client(api_key=api_key)
-        live = []
-        for m in client.models.list():
-            name = getattr(m, "name", "").replace("models/", "")
-            if name:
-                live.append(name)
-        if live:
-            flash = [m for m in live if "flash" in m.lower()]
-            pro   = [m for m in live if "pro" in m.lower() and m not in flash]
-            rest  = [m for m in live if m not in flash and m not in pro]
-            return (flash + pro + rest)[:10]
-    except Exception:
-        pass
     try:
         import requests
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
         res = requests.get(url, timeout=10)
         if res.status_code == 200:
             models_data = res.json().get("models", [])
-            live = [
-                m["name"].replace("models/", "")
-                for m in models_data
-                if "generateContent" in m.get("supportedGenerationMethods", [])
-            ]
+            deprecated_tags = ["1.5-flash", "1.5-pro", "gemini-pro", "2.5-flash", "2.5-flash-lite"]
+            live = []
+            for m in models_data:
+                methods = m.get("supportedGenerationMethods", [])
+                if "generateContent" in methods:
+                    name = m["name"].replace("models/", "")
+                    if not any(d in name.lower() for d in deprecated_tags):
+                        live.append(name)
             if live:
                 flash = [m for m in live if "flash" in m.lower()]
                 pro   = [m for m in live if "pro" in m.lower() and m not in flash]
@@ -579,7 +576,7 @@ def fetch_available_gemini_models(api_key):
     return defaults
 
 
-def generate_rag_response(query, chunks, provider, api_key, model_name="gemini-2.5-flash"):
+def generate_rag_response(query, chunks, provider, api_key, model_name="gemini-3-flash-preview"):
     context_str = "\n\n---\n\n".join(chunks)
     prompt = f"""You are PaperMind, a precise document intelligence assistant.
 Answer the question below using ONLY the document context provided.
@@ -593,52 +590,45 @@ QUESTION:
 {query}
 """
     if provider == "Google Gemini":
-        candidates = [model_name] + [
-            f for f in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
-            if f != model_name
-        ]
-
-        # 1. Official Google GenAI SDK (3.x)
-        try:
-            from google import genai
-            client = genai.Client(api_key=api_key)
-            for cand in candidates:
-                try:
-                    cname = cand.replace("models/", "")
-                    resp = client.models.generate_content(model=cname, contents=prompt)
-                    if resp and hasattr(resp, "text") and resp.text:
-                        return resp.text
-                except Exception as ex:
-                    if any(k in str(ex).lower() for k in ["404", "not found", "not supported", "models/"]):
-                        continue
-                    raise ex
-        except Exception:
-            pass
-
-        # 2. Direct HTTP REST API via requests (zero dependency issues)
         import requests
+
+        active_fallbacks = [
+            "gemini-3-flash-preview",
+            "gemini-flash-latest",
+            "gemini-3.8-flash",
+            "gemini-3.5-flash",
+            "gemini-3.6-flash",
+            "gemini-3.1-pro-preview",
+            "gemini-pro-latest"
+        ]
+        candidates = [model_name] + [f for f in active_fallbacks if f != model_name]
+
         last_error = None
         for cand in candidates:
             cname = cand.replace("models/", "")
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{cname}:generateContent?key={api_key}"
-                payload = {"contents": [{"parts": [{"text": prompt}]}]}
-                res = requests.post(url, json=payload, timeout=40)
-                if res.status_code == 200:
-                    data = res.json()
-                    candidates_out = data.get("candidates", [])
-                    if candidates_out:
-                        parts = candidates_out[0].get("content", {}).get("parts", [])
-                        if parts:
-                            return parts[0].get("text", "")
-                elif res.status_code in (404, 400):
-                    last_error = Exception(f"HTTP {res.status_code}: {res.text}")
+            for attempt in range(2):
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{cname}:generateContent?key={api_key}"
+                    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+                    res = requests.post(url, json=payload, timeout=25)
+                    if res.status_code == 200:
+                        data = res.json()
+                        candidates_out = data.get("candidates", [])
+                        if candidates_out:
+                            parts = candidates_out[0].get("content", {}).get("parts", [])
+                            if parts:
+                                return parts[0].get("text", "")
+                    elif res.status_code in (404, 400):
+                        last_error = Exception(f"HTTP {res.status_code}: {res.text}")
+                        break
+                    elif res.status_code in (503, 429):
+                        last_error = Exception(f"HTTP {res.status_code}: {res.text}")
+                        break
+                    else:
+                        last_error = Exception(f"Google API error {res.status_code}: {res.text}")
+                except Exception as e:
+                    last_error = e
                     continue
-                else:
-                    raise Exception(f"Google API error {res.status_code}: {res.text}")
-            except Exception as e:
-                last_error = e
-                continue
 
         if last_error:
             raise last_error
