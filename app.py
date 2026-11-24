@@ -472,6 +472,15 @@ html, body, [class*="css"] {
 
 
 # ─── Helpers ───────────────────────────────────────────────────────────────────
+def get_secret(key_name, default=""):
+    try:
+        if key_name in st.secrets:
+            return str(st.secrets[key_name]).strip()
+    except Exception:
+        pass
+    return default
+
+
 def extract_pdf_text(uploaded_files):
     documents_data, combined_text, total_pages = [], "", 0
     for file in uploaded_files:
@@ -706,8 +715,7 @@ with st.sidebar:
         provider = st.selectbox("Provider", ["Google Gemini", "OpenAI"], label_visibility="collapsed")
 
         if provider == "Google Gemini":
-            env_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API")
-                       or (st.secrets.get("GEMINI_API_KEY","") if hasattr(st,"secrets") else ""))
+            env_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API") or get_secret("GEMINI_API_KEY"))
             user_key_input = st.text_input("Gemini API Key", value="", type="password",
                                     placeholder="●●●●●●●● (Configured securely)" if env_key else "Paste Gemini API Key (AIza…)", label_visibility="collapsed")
             api_key = user_key_input.strip() if user_key_input.strip() else env_key
@@ -716,8 +724,7 @@ with st.sidebar:
             models  = fetch_available_gemini_models(api_key)
             model_name = st.selectbox("Model", models, label_visibility="collapsed")
         else:
-            env_key = (os.getenv("OPENAI_API_KEY")
-                       or (st.secrets.get("OPENAI_API_KEY","") if hasattr(st,"secrets") else ""))
+            env_key = (os.getenv("OPENAI_API_KEY") or get_secret("OPENAI_API_KEY"))
             user_key_input = st.text_input("OpenAI API Key", value="", type="password",
                                     placeholder="●●●●●●●● (Configured securely)" if env_key else "Paste OpenAI Key (sk-…)", label_visibility="collapsed")
             api_key = user_key_input.strip() if user_key_input.strip() else env_key
