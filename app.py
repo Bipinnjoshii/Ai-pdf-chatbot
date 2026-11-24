@@ -3,404 +3,512 @@ import re
 from dotenv import load_dotenv
 import streamlit as st
 from PyPDF2 import PdfReader
-from PIL import Image
 
-# Load environment variables
 load_dotenv()
 
-# Page Configuration — Enterprise Grade
+# ─── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="PaperMind AI · Enterprise Document Intelligence",
-    page_icon="⚡",
+    page_title="PaperMind · Document Intelligence",
+    page_icon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-# Custom High-End SaaS Design System
+# ─── Design System ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-    /* Global Typography & Palette */
-    html, body, [class*="css"], .stMarkdown, .stText {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        letter-spacing: -0.012em;
-    }
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; }
 
-    code, pre, .mono-text {
-        font-family: 'JetBrains Mono', monospace !important;
-    }
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+}
 
-    /* Backgrounds & Surface Elevation */
-    .stApp {
-        background-color: #080B11 !important;
-        color: #F8FAFC !important;
-    }
+/* ── App shell ── */
+.stApp {
+    background: #0a0a0f !important;
+    color: #e2e8f0 !important;
+}
 
-    [data-testid="stSidebar"] {
-        background-color: #0D121D !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-    }
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background: #0d0d14 !important;
+    border-right: 1px solid rgba(255,255,255,0.06) !important;
+}
+[data-testid="stSidebar"] > div:first-child {
+    padding: 0 !important;
+}
 
-    /* Brand Header Component */
-    .hero-container {
-        padding: 24px 0 16px 0;
-        margin-bottom: 24px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        gap: 16px;
-    }
+/* ── Sidebar brand strip ── */
+.sb-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 4px;
+}
+.sb-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.sb-logo svg { display: block; }
+.sb-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.02em;
+}
+.sb-tagline {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 1px;
+}
 
-    .hero-brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
+/* ── Sidebar sections ── */
+.sb-section {
+    padding: 12px 16px 4px;
+}
+.sb-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #475569;
+    margin-bottom: 8px;
+}
 
-    .hero-logo-box {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, rgba(0, 229, 153, 0.16) 0%, rgba(99, 102, 241, 0.2) 100%);
-        border: 1px solid rgba(0, 229, 153, 0.35);
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #00E599;
-        box-shadow: 0 4px 16px rgba(0, 229, 153, 0.18);
-    }
+/* ── Stat row ── */
+.stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0 0;
+}
+.stat-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.stat-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.stat-lbl {
+    font-size: 0.69rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.stat-box.wide {
+    grid-column: span 2;
+}
 
-    .hero-title {
-        font-size: 1.85rem !important;
-        font-weight: 800 !important;
-        color: #F8FAFC !important;
-        margin: 0 !important;
-        line-height: 1.2 !important;
-        letter-spacing: -0.03em !important;
-    }
+/* ── Docs badge list ── */
+.doc-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: rgba(99,102,241,0.08);
+    border: 1px solid rgba(99,102,241,0.18);
+    border-radius: 8px;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #a5b4fc;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.doc-badge svg { flex-shrink: 0; }
 
-    .hero-subtitle {
-        font-size: 0.92rem !important;
-        color: #94A3B8 !important;
-        margin: 4px 0 0 0 !important;
-        line-height: 1.5 !important;
-    }
+/* ── Streamlit input overrides ── */
+.stTextInput > div > div > input,
+.stSelectbox > div > div,
+.stSlider > div {
+    background: #12121c !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 10px !important;
+    color: #e2e8f0 !important;
+    font-size: 0.88rem !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.2) !important;
+}
+[data-testid="stSelectbox"] > div {
+    background: #12121c !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
 
-    .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(0, 229, 153, 0.08);
-        border: 1px solid rgba(0, 229, 153, 0.25);
-        color: #00E599;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        padding: 6px 14px;
-        border-radius: 9999px;
-        font-variant-numeric: tabular-nums;
-    }
+/* ── File uploader ── */
+[data-testid="stFileUploader"] {
+    background: rgba(255,255,255,0.015) !important;
+    border: 1.5px dashed rgba(99,102,241,0.3) !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    transition: border-color 0.2s;
+}
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(99,102,241,0.6) !important;
+}
 
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: #00E599;
-        box-shadow: 0 0 8px #00E599;
-        animation: pulseDot 2s infinite ease-in-out;
-    }
+/* ── Buttons ── */
+.stButton > button {
+    background: rgba(255,255,255,0.04) !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+    font-size: 0.84rem !important;
+    font-weight: 500 !important;
+    padding: 7px 14px !important;
+    transition: all 0.15s ease !important;
+}
+.stButton > button:hover {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.18) !important;
+    color: #f1f5f9 !important;
+}
+.stButton > button[kind="primary"] {
+    background: #6366f1 !important;
+    color: #fff !important;
+    border-color: #6366f1 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 12px rgba(99,102,241,0.35) !important;
+}
+.stButton > button[kind="primary"]:hover {
+    background: #5457d4 !important;
+    border-color: #5457d4 !important;
+    box-shadow: 0 4px 18px rgba(99,102,241,0.45) !important;
+}
 
-    @keyframes pulseDot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(0.85); }
-    }
+/* ── Expander ── */
+[data-testid="stExpander"] {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 10px !important;
+}
+[data-testid="stExpander"] summary {
+    color: #94a3b8 !important;
+    font-size: 0.84rem !important;
+}
 
-    /* Telemetry KPI Cards */
-    .telemetry-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 12px;
-        margin: 16px 0;
-    }
+/* ── Main layout ── */
+.main-wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+}
 
-    .telemetry-card {
-        background-color: #121824;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        padding: 12px 14px;
-        display: flex;
-        flex-direction: column;
-        transition: border-color 0.2s ease, transform 0.2s ease;
-    }
+/* ── Top bar ── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 24px;
+}
+.top-bar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.top-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.03em;
+    margin: 0;
+}
+.top-sub {
+    font-size: 0.84rem;
+    color: #64748b;
+    margin: 0;
+}
+.engine-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid;
+}
+.engine-pill.active {
+    background: rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.25);
+    color: #4ade80;
+}
+.engine-pill.idle {
+    background: rgba(100,116,139,0.08);
+    border-color: rgba(100,116,139,0.2);
+    color: #64748b;
+}
+.pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+}
+.pill-dot.active { background: #4ade80; box-shadow: 0 0 6px #4ade80; animation: blink 2s infinite; }
+.pill-dot.idle   { background: #64748b; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-    .telemetry-card:hover {
-        border-color: rgba(0, 229, 153, 0.3);
-        transform: translateY(-1px);
-    }
+/* ── Empty state ── */
+.empty-state {
+    text-align: center;
+    padding: 64px 24px;
+}
+.empty-icon {
+    width: 72px; height: 72px;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    color: #818cf8;
+}
+.empty-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+.empty-desc {
+    font-size: 0.9rem;
+    color: #64748b;
+    max-width: 400px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+}
+.steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 640px;
+    margin: 0 auto;
+}
+.step-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 18px 16px;
+    text-align: left;
+}
+.step-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6366f1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.step-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 5px;
+}
+.step-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.5;
+}
 
-    .telemetry-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        color: #94A3B8;
-        margin-bottom: 4px;
-    }
+/* ── Chips ── */
+.chips-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #475569;
+    margin-bottom: 8px;
+}
 
-    .telemetry-value {
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #F8FAFC;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-    }
+/* ── Chat messages ── */
+.msg-wrap {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+}
+.msg-avatar {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.msg-avatar.user {
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.25);
+    color: #818cf8;
+}
+.msg-avatar.assistant {
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.22);
+    color: #a78bfa;
+}
+.msg-body { flex: 1; min-width: 0; }
+.msg-role {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.msg-bubble {
+    font-size: 0.93rem;
+    line-height: 1.65;
+    color: #e2e8f0;
+}
+.msg-bubble.user-bubble {
+    background: rgba(99,102,241,0.08);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 4px 14px 14px 14px;
+    padding: 12px 16px;
+}
+.msg-bubble.assistant-bubble {
+    background: transparent;
+}
 
-    /* Citation Card Component */
-    .citation-card {
-        background-color: #0E1420;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        font-size: 0.88rem;
-        line-height: 1.6;
-        color: #CBD5E1;
-        transition: all 0.15s ease;
-    }
+/* ── Citation cards ── */
+.cite-wrap { margin-top: 12px; }
+.cite-header {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #475569;
+    margin-bottom: 7px;
+}
+.cite-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 7px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #94a3b8;
+}
+.cite-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.cite-fname {
+    font-weight: 600;
+    color: #818cf8;
+    font-size: 0.78rem;
+}
+.cite-page {
+    font-size: 0.72rem;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
 
-    .citation-card:hover {
-        border-color: rgba(0, 229, 153, 0.35);
-        background-color: #121A2A;
-    }
+/* ── Chat input ── */
+[data-testid="stChatInput"] {
+    background: #12121c !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5) !important;
+}
+[data-testid="stChatInput"] textarea {
+    color: #e2e8f0 !important;
+    font-size: 0.93rem !important;
+}
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #475569 !important;
+}
 
-    .citation-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        padding-bottom: 6px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .citation-tag {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #00E599;
-        letter-spacing: 0.02em;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .citation-meta {
-        font-size: 0.74rem;
-        color: #64748B;
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* Pipeline Architecture Step Cards */
-    .pipeline-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 16px;
-        margin: 20px 0 32px 0;
-    }
-
-    .pipeline-card {
-        background-color: #0F1522;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 22px 20px;
-        display: flex;
-        flex-direction: column;
-        transition: all 0.25s ease;
-    }
-
-    .pipeline-card:hover {
-        border-color: rgba(0, 229, 153, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .pipeline-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #00E599;
-        margin-bottom: 14px;
-    }
-
-    .pipeline-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #F8FAFC;
-        margin-bottom: 8px;
-    }
-
-    .pipeline-desc {
-        font-size: 0.88rem;
-        color: #94A3B8;
-        line-height: 1.55;
-        margin: 0;
-    }
-
-    /* Custom Streamlit Component Styling Overrides */
-    .stButton>button {
-        background-color: #141C2E !important;
-        color: #F8FAFC !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 9999px !important;
-        padding: 8px 18px !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    }
-
-    .stButton>button:hover {
-        background-color: #1C273E !important;
-        border-color: #00E599 !important;
-        color: #00E599 !important;
-        transform: translateY(-1px) !important;
-    }
-
-    .stButton>button[kind="primary"] {
-        background-color: #00E599 !important;
-        color: #080B11 !important;
-        border: 1px solid #00E599 !important;
-        font-weight: 700 !important;
-        box-shadow: 0 4px 16px rgba(0, 229, 153, 0.25) !important;
-    }
-
-    .stButton>button[kind="primary"]:hover {
-        background-color: #00C882 !important;
-        color: #080B11 !important;
-        border-color: #00C882 !important;
-        box-shadow: 0 6px 20px rgba(0, 229, 153, 0.35) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    /* Input Fields */
-    .stTextInput>div>div>input {
-        background-color: #0A0F18 !important;
-        color: #F8FAFC !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-        font-size: 0.92rem !important;
-        padding: 10px 14px !important;
-    }
-
-    .stTextInput>div>div>input:focus {
-        border-color: #00E599 !important;
-        box-shadow: 0 0 0 2px rgba(0, 229, 153, 0.2) !important;
-    }
-
-    /* File Uploader Container */
-    [data-testid="stFileUploader"] {
-        background-color: #0B101A !important;
-        border: 1px dashed rgba(255, 255, 255, 0.14) !important;
-        border-radius: 16px !important;
-        padding: 14px !important;
-        transition: border-color 0.2s ease !important;
-    }
-
-    [data-testid="stFileUploader"]:hover {
-        border-color: rgba(0, 229, 153, 0.4) !important;
-    }
-
-    /* Chat Input Bar */
-    [data-testid="stChatInput"] {
-        background-color: #0C111C !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 9999px !important;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
-    }
-
-    /* Chat Messages */
-    [data-testid="stChatMessage"] {
-        background-color: #0F1522 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 18px !important;
-        padding: 16px 20px !important;
-        margin-bottom: 14px !important;
-    }
-
-    [data-testid="stExpander"] {
-        background-color: transparent !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 14px !important;
-        overflow: hidden;
-    }
+/* ── Streamlit default overrides ── */
+[data-testid="stChatMessage"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+.stMarkdown p { color: #e2e8f0; line-height: 1.65; }
+.stMarkdown code {
+    background: rgba(99,102,241,0.12) !important;
+    border: 1px solid rgba(99,102,241,0.2) !important;
+    border-radius: 5px !important;
+    color: #a5b4fc !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.84em !important;
+    padding: 1px 5px !important;
+}
+.stMarkdown pre {
+    background: #0d0d14 !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 10px !important;
+}
+.stAlert {
+    background: rgba(99,102,241,0.07) !important;
+    border: 1px solid rgba(99,102,241,0.2) !important;
+    border-radius: 10px !important;
+    color: #a5b4fc !important;
+}
+/* Hide Streamlit branding */
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding-top: 0 !important; padding-bottom: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ==============================================================================
-# Helper Functions — Robust Ingestion & Local Semantic Search
-# ==============================================================================
+# ─── Helpers ───────────────────────────────────────────────────────────────────
 def extract_pdf_text(uploaded_files):
-    """Extract text and metadata from uploaded PDF documents."""
-    documents_data = []
-    combined_text = ""
-    total_pages = 0
-    
+    documents_data, combined_text, total_pages = [], "", 0
     for file in uploaded_files:
         try:
-            pdf_reader = PdfReader(file)
-            file_text = ""
-            file_pages = len(pdf_reader.pages)
+            reader = PdfReader(file)
+            file_text, file_pages = "", len(reader.pages)
             total_pages += file_pages
-            
-            for page_num, page in enumerate(pdf_reader.pages):
-                extracted = page.extract_text()
-                if extracted:
-                    file_text += f"\n[Document: {file.name} - Page {page_num + 1}]\n" + extracted
-            
+            for pnum, page in enumerate(reader.pages):
+                txt = page.extract_text()
+                if txt:
+                    file_text += f"\n[Document: {file.name} - Page {pnum+1}]\n" + txt
             combined_text += file_text
-            documents_data.append({
-                "filename": file.name,
-                "pages": file_pages,
-                "char_count": len(file_text)
-            })
+            documents_data.append({"filename": file.name, "pages": file_pages, "char_count": len(file_text)})
         except Exception as e:
-            st.error(f"Error reading {file.name}: {e}")
-            
+            st.error(f"Could not read {file.name}: {e}")
     return combined_text, documents_data, total_pages
 
 
 def split_into_chunks(text, chunk_size=1000, chunk_overlap=200):
-    """Split text into overlapping semantic chunks."""
     if not text.strip():
         return []
-    
     paragraphs = re.split(r'\n\s*\n', text)
-    chunks = []
-    current_chunk = ""
-    
+    chunks, current_chunk = [], ""
     for para in paragraphs:
         para = para.strip()
         if not para:
             continue
-            
         if len(current_chunk) + len(para) <= chunk_size:
-            current_chunk += "\n\n" + para if current_chunk else para
+            current_chunk += ("\n\n" + para) if current_chunk else para
         else:
             if current_chunk:
                 chunks.append(current_chunk.strip())
-            
             if len(para) > chunk_size:
-                words = para.split()
-                temp_chunk = ""
+                words, temp_chunk = para.split(), ""
                 for word in words:
                     if len(temp_chunk) + len(word) + 1 <= chunk_size:
-                        temp_chunk += " " + word if temp_chunk else word
+                        temp_chunk += (" " + word) if temp_chunk else word
                     else:
                         chunks.append(temp_chunk.strip())
                         overlap_words = temp_chunk.split()[-int(chunk_overlap/6):] if chunk_overlap > 0 else []
@@ -410,405 +518,382 @@ def split_into_chunks(text, chunk_size=1000, chunk_overlap=200):
             else:
                 overlap_text = current_chunk[-chunk_overlap:] if chunk_overlap > 0 and len(current_chunk) > chunk_overlap else ""
                 current_chunk = (overlap_text + "\n\n" + para).strip()
-                
     if current_chunk:
         chunks.append(current_chunk.strip())
-        
     return chunks
 
 
 def simple_semantic_search(query, chunks, top_k=4):
-    """Fast semantic token and term-density scoring for contextual retrieval."""
     if not chunks:
         return []
-    
     query_tokens = set(re.findall(r'\w+', query.lower()))
-    scored_chunks = []
-    
+    scored = []
     for chunk in chunks:
-        chunk_tokens = re.findall(r'\w+', chunk.lower())
-        if not chunk_tokens:
+        ctoks = re.findall(r'\w+', chunk.lower())
+        if not ctoks:
             continue
-        
-        match_count = sum(1 for token in chunk_tokens if token in query_tokens)
-        score = match_count / (len(chunk_tokens) ** 0.5) if chunk_tokens else 0
-        scored_chunks.append((score, chunk))
-        
-    scored_chunks.sort(key=lambda x: x[0], reverse=True)
-    return [chunk for score, chunk in scored_chunks[:top_k]]
+        score = sum(1 for t in ctoks if t in query_tokens) / (len(ctoks) ** 0.5)
+        scored.append((score, chunk))
+    scored.sort(reverse=True, key=lambda x: x[0])
+    return [c for _, c in scored[:top_k]]
 
 
-def generate_rag_response(query, relevant_chunks, provider, api_key, model_name="gemini-1.5-flash"):
-    """Augment prompt with retrieved chunks and invoke LLM."""
-    context_str = "\n\n---\n\n".join(relevant_chunks)
-    
-    system_prompt = f"""You are PaperMind, an enterprise document intelligence and research assistant.
-Answer the user's question accurately, deeply, and concisely based strictly on the provided context excerpts from the uploaded document(s).
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_available_gemini_models(api_key):
+    defaults = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    if not api_key:
+        return defaults
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        live = []
+        for m in genai.list_models():
+            if "generateContent" in getattr(m, "supported_generation_methods", []):
+                live.append(m.name.replace("models/", ""))
+        if live:
+            flash = [m for m in live if "flash" in m.lower()]
+            pro   = [m for m in live if "pro" in m.lower() and m not in flash]
+            rest  = [m for m in live if m not in flash and m not in pro]
+            return flash + pro + rest
+    except Exception:
+        pass
+    return defaults
 
-Guidelines:
-1. Ground every claim directly in the context.
-2. If the context does not contain sufficient details to answer, clearly and honestly state that the uploaded documents do not address it.
-3. Organize structured findings with clear bullet points, bold headers, and exact citations where applicable.
+
+def generate_rag_response(query, chunks, provider, api_key, model_name="gemini-2.5-flash"):
+    context_str = "\n\n---\n\n".join(chunks)
+    prompt = f"""You are PaperMind, a precise document intelligence assistant.
+Answer the question below using ONLY the document context provided.
+If the context doesn't contain the answer, say so clearly and briefly.
+Format your answer with clean markdown — use bullet points, bold headings, and short paragraphs for readability.
 
 DOCUMENT CONTEXT:
 {context_str}
 
-USER INQUIRY:
+QUESTION:
 {query}
 """
-
     if provider == "Google Gemini":
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(system_prompt)
-        return response.text
-        
+        fallbacks = [model_name] + [f for f in ["gemini-2.5-flash","gemini-2.0-flash","gemini-1.5-flash-latest","gemini-1.5-flash","gemini-1.5-pro","gemini-pro"] if f != model_name]
+        last_err = None
+        for candidate in fallbacks:
+            try:
+                resp = genai.GenerativeModel(candidate.replace("models/","")).generate_content(prompt)
+                if resp and getattr(resp, "text", None):
+                    return resp.text
+            except Exception as e:
+                last_err = e
+                if any(k in str(e).lower() for k in ["404","not found","not supported","models/"]):
+                    continue
+                raise e
+        # Last-ditch: query live model list
+        try:
+            live_models = [m.name.replace("models/","") for m in genai.list_models() if "generateContent" in getattr(m,"supported_generation_methods",[])]
+            for lm in live_models:
+                try:
+                    resp = genai.GenerativeModel(lm).generate_content(prompt)
+                    if resp and getattr(resp, "text", None):
+                        return resp.text
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        raise last_err
+
     elif provider == "OpenAI":
         from langchain.chat_models import ChatOpenAI
         from langchain.schema import HumanMessage
         chat = ChatOpenAI(openai_api_key=api_key, model_name=model_name, temperature=0.2)
-        response = chat([HumanMessage(content=system_prompt)])
-        return response.content
+        return chat([HumanMessage(content=prompt)]).content
 
-    return "Selected provider is not configured."
-
-
-# ==============================================================================
-# Session State Initialization
-# ==============================================================================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "processed_chunks" not in st.session_state:
-    st.session_state.processed_chunks = []
-if "doc_stats" not in st.session_state:
-    st.session_state.doc_stats = None
-if "pending_prompt" not in st.session_state:
-    st.session_state.pending_prompt = None
+    return "Provider not configured."
 
 
-# ==============================================================================
-# Sidebar — Control Center & Document Telemetry
-# ==============================================================================
-with st.sidebar:
-    # Sidebar Header
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-        <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 229, 153, 0.15); border: 1px solid rgba(0, 229, 153, 0.3); display: flex; align-items: center; justify-content: center; color: #00E599;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-        </div>
-        <div>
-            <h4 style="margin: 0; font-weight: 800; font-size: 1.1rem; color: #F8FAFC;">Control Center</h4>
-            <small style="color: #64748B;">Neural Ingestion & RAG Tuning</small>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Provider & Model Settings
-    provider = st.selectbox(
-        "Neural Engine Provider",
-        ["Google Gemini", "OpenAI"],
-        index=0,
-        help="Google Gemini includes a generous free tier via AI Studio. OpenAI uses your platform credits."
-    )
-    
-    if provider == "Google Gemini":
-        env_key = (
-            os.getenv("GEMINI_API_KEY")
-            or os.getenv("GEMINI_API")
-            or (st.secrets["GEMINI_API_KEY"] if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets else "")
-        )
-        api_key = st.text_input(
-            "Gemini Studio API Key",
-            value=env_key if env_key else "",
-            type="password",
-            help="Acquire your API key from Google AI Studio (https://aistudio.google.com/)"
-        )
-        model_name = st.selectbox("Model Architecture", ["gemini-1.5-flash", "gemini-1.5-pro"])
-    else:
-        env_key = (
-            os.getenv("OPENAI_API_KEY")
-            or (st.secrets["OPENAI_API_KEY"] if hasattr(st, "secrets") and "OPENAI_API_KEY" in st.secrets else "")
-        )
-        api_key = st.text_input(
-            "OpenAI API Key",
-            value=env_key if env_key else "",
-            type="password",
-            help="Obtain your API key from https://platform.openai.com/"
-        )
-        model_name = st.selectbox("Model Architecture", ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"])
-        
-    st.markdown("<hr style='border-color: rgba(255,255,255,0.08); margin: 20px 0;'>", unsafe_allow_html=True)
-    
-    # Document Upload Section
-    st.markdown("<h5 style='margin: 0 0 10px 0; font-weight: 700; color: #F8FAFC; font-size: 0.95rem;'>Source Documents</h5>", unsafe_allow_html=True)
-    uploaded_files = st.file_uploader(
-        "Upload PDF documents",
-        type=["pdf"],
-        accept_multiple_files=True,
-        label_visibility="collapsed"
-    )
-    
-    # Process Trigger
-    if uploaded_files:
-        if st.button("Index Knowledge Base", type="primary", use_container_width=True):
-            with st.spinner("Partitioning vector chunks & parsing layout..."):
-                raw_text, doc_info, total_pages = extract_pdf_text(uploaded_files)
-                chunks = split_into_chunks(raw_text, 1000, 150)
-                
-                st.session_state.processed_chunks = chunks
-                st.session_state.doc_stats = {
-                    "total_pages": total_pages,
-                    "total_chars": len(raw_text),
-                    "total_chunks": len(chunks),
-                    "files": [d["filename"] for d in doc_info]
-                }
-                st.rerun()
-
-    # Document Telemetry Bar
-    if st.session_state.doc_stats:
-        stats = st.session_state.doc_stats
-        st.markdown(f"""
-        <div class="telemetry-grid">
-            <div class="telemetry-card">
-                <span class="telemetry-label">Pages</span>
-                <span class="telemetry-value">{stats['total_pages']}</span>
-            </div>
-            <div class="telemetry-card">
-                <span class="telemetry-label">Chunks</span>
-                <span class="telemetry-value">{stats['total_chunks']}</span>
-            </div>
-            <div class="telemetry-card">
-                <span class="telemetry-label">Characters</span>
-                <span class="telemetry-value">{stats['total_chars']:,}</span>
-            </div>
-        </div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 12px; margin-top: 8px;">
-            <small style="color: #94A3B8; font-size: 0.78rem;">Active Files: <strong style="color: #F8FAFC;">{', '.join(stats['files'])}</strong></small>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # RAG Hyperparameters Accordion
-    with st.expander("RAG Partitioning Parameters"):
-        chunk_size = st.slider("Chunk Size (Characters)", 400, 2000, 1000, step=100)
-        chunk_overlap = st.slider("Chunk Overlap (Characters)", 50, 400, 150, step=25)
-        top_k = st.slider("Top Chunks Retrieved", 2, 8, 4)
-    if "top_k" not in locals():
-        top_k = 4
-
-    st.markdown("<hr style='border-color: rgba(255,255,255,0.08); margin: 20px 0;'>", unsafe_allow_html=True)
-
-    # Session Management Actions
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        if st.button("Clear Chat", use_container_width=True):
-            st.session_state.messages = []
-            st.rerun()
-    with col_s2:
-        if st.button("Reset All", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.processed_chunks = []
-            st.session_state.doc_stats = None
-            st.rerun()
-
-
-# ==============================================================================
-# Main Interface Surface
-# ==============================================================================
-has_documents = bool(st.session_state.processed_chunks)
-status_label = f"{len(st.session_state.processed_chunks)} Chunks Indexed" if has_documents else "Engine Standby"
-
-st.markdown(f"""
-<div class="hero-container">
-    <div class="hero-brand">
-        <div class="hero-logo-box">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                <polyline points="2 17 12 22 22 17"></polyline>
-                <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
-        </div>
-        <div>
-            <h1 class="hero-title">PaperMind<span style="color: #00E599;">.</span></h1>
-            <p class="hero-subtitle">High-precision Retrieval-Augmented Generation for complex technical and enterprise documents.</p>
-        </div>
-    </div>
-    <div class="status-pill">
-        <div class="status-dot"></div>
-        <span>{status_label}</span>
-    </div>
+def render_citation(src, idx):
+    match = re.search(r'\[Document: (.*?) - Page (\d+)\]', src)
+    fname  = match.group(1) if match else "Document"
+    page   = f"Page {match.group(2)}" if match else f"Chunk #{idx+1}"
+    body   = re.sub(r'\[Document: .*? - Page \d+\]\n?', '', src).strip()
+    # Truncate long body
+    preview = (body[:320] + "…") if len(body) > 320 else body
+    st.markdown(f"""
+<div class="cite-card">
+  <div class="cite-card-top">
+    <span class="cite-fname">{fname}</span>
+    <span class="cite-page">{page}</span>
+  </div>
+  <div>{preview}</div>
 </div>
 """, unsafe_allow_html=True)
 
 
-# ==============================================================================
-# Empty State: Pipeline Blueprint Canvas
-# ==============================================================================
-if not has_documents:
+# ─── Session state ─────────────────────────────────────────────────────────────
+for key, val in [("messages", []), ("chunks", []), ("doc_stats", None), ("pending", None)]:
+    if key not in st.session_state:
+        st.session_state[key] = val
+
+
+# ─── Sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    # Brand
     st.markdown("""
-    <div class="pipeline-container">
-        <div class="pipeline-card">
-            <div class="pipeline-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </div>
-            <div class="pipeline-title">1. Neural Ingestion</div>
-            <p class="pipeline-desc">Upload research papers, quarterly financial disclosures, or technical manuals. Text and structure are parsed accurately.</p>
-        </div>
-        <div class="pipeline-card">
-            <div class="pipeline-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                </svg>
-            </div>
-            <div class="pipeline-title">2. Semantic Partitioning</div>
-            <p class="pipeline-desc">Documents are segmented into overlapping vector chunks, preventing context boundary loss and preserving continuity.</p>
-        </div>
-        <div class="pipeline-card">
-            <div class="pipeline-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 14 14"></polyline>
-                </svg>
-            </div>
-            <div class="pipeline-title">3. Verified Synthesis</div>
-            <p class="pipeline-desc">Relevant excerpts are retrieved and injected into the prompt, guaranteeing factual, cited answers with zero hallucinations.</p>
-        </div>
+<div class="sb-brand">
+  <div class="sb-logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+  </div>
+  <div>
+    <div class="sb-name">PaperMind</div>
+    <div class="sb-tagline">Document Intelligence</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+    # Provider & model
+    st.markdown('<div class="sb-section"><div class="sb-label">AI Model</div></div>', unsafe_allow_html=True)
+    with st.container():
+        provider = st.selectbox("Provider", ["Google Gemini", "OpenAI"], label_visibility="collapsed")
+
+        if provider == "Google Gemini":
+            env_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API")
+                       or (st.secrets.get("GEMINI_API_KEY","") if hasattr(st,"secrets") else ""))
+            api_key = st.text_input("Gemini API Key", value=env_key or "", type="password",
+                                    placeholder="AIza…", label_visibility="collapsed")
+            models  = fetch_available_gemini_models(api_key)
+            model_name = st.selectbox("Model", models, label_visibility="collapsed")
+        else:
+            env_key = (os.getenv("OPENAI_API_KEY")
+                       or (st.secrets.get("OPENAI_API_KEY","") if hasattr(st,"secrets") else ""))
+            api_key = st.text_input("OpenAI API Key", value=env_key or "", type="password",
+                                    placeholder="sk-…", label_visibility="collapsed")
+            model_name = st.selectbox("Model", ["gpt-4o-mini","gpt-4o","gpt-3.5-turbo"], label_visibility="collapsed")
+
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;'>", unsafe_allow_html=True)
+
+    # Document upload
+    st.markdown('<div class="sb-section"><div class="sb-label">Documents</div></div>', unsafe_allow_html=True)
+    uploaded = st.file_uploader("Upload PDFs", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed")
+
+    if uploaded:
+        if st.button("Index Documents", type="primary", use_container_width=True):
+            with st.spinner("Parsing & chunking…"):
+                raw, doc_info, pages = extract_pdf_text(uploaded)
+                chunks = split_into_chunks(raw, 1000, 150)
+                st.session_state.chunks    = chunks
+                st.session_state.doc_stats = {
+                    "pages": pages, "chunks": len(chunks),
+                    "chars": len(raw), "files": [d["filename"] for d in doc_info]
+                }
+                st.session_state.messages  = []
+                st.rerun()
+
+    # Stats
+    if st.session_state.doc_stats:
+        s = st.session_state.doc_stats
+        st.markdown(f"""
+<div class="stat-row" style="padding:0 16px;">
+  <div class="stat-box"><div class="stat-num">{s['pages']}</div><div class="stat-lbl">Pages</div></div>
+  <div class="stat-box"><div class="stat-num">{s['chunks']}</div><div class="stat-lbl">Chunks</div></div>
+  <div class="stat-box wide"><div class="stat-num">{s['chars']:,}</div><div class="stat-lbl">Characters indexed</div></div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown('<div style="padding:4px 16px 0;">', unsafe_allow_html=True)
+        for f in s["files"]:
+            short = (f[:36]+"…") if len(f) > 36 else f
+            st.markdown(f"""
+<div class="doc-badge">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>
+  {short}
+</div>""", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;'>", unsafe_allow_html=True)
+
+    # RAG settings
+    with st.expander("⚙️  Retrieval Settings"):
+        chunk_size    = st.slider("Chunk size", 400, 2000, 1000, step=100)
+        chunk_overlap = st.slider("Chunk overlap", 50, 400, 150, step=25)
+        top_k         = st.slider("Top chunks (K)", 2, 10, 4)
+    if "top_k" not in locals():
+        top_k = 4
+
+    st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;'>", unsafe_allow_html=True)
+
+    # Session controls
+    cc1, cc2 = st.columns(2)
+    with cc1:
+        if st.button("Clear chat", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+    with cc2:
+        if st.button("Reset all", use_container_width=True):
+            st.session_state.messages = []
+            st.session_state.chunks   = []
+            st.session_state.doc_stats = None
+            st.rerun()
+
+
+# ─── Main area ─────────────────────────────────────────────────────────────────
+has_docs = bool(st.session_state.chunks)
+
+st.markdown('<div class="main-wrap">', unsafe_allow_html=True)
+
+# Top bar
+pill_class = "active" if has_docs else "idle"
+dot_class  = "active" if has_docs else "idle"
+pill_text  = f"{len(st.session_state.chunks)} chunks ready" if has_docs else "No document loaded"
+
+st.markdown(f"""
+<div class="top-bar">
+  <div class="top-bar-left">
+    <h1 class="top-title">PaperMind<span style="color:#6366f1;">.</span></h1>
+    <p class="top-sub">Ask anything about your uploaded documents</p>
+  </div>
+  <div class="engine-pill {pill_class}">
+    <div class="pill-dot {dot_class}"></div>
+    {pill_text}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ─── Empty state ───────────────────────────────────────────────────────────────
+if not has_docs:
+    st.markdown("""
+<div class="empty-state">
+  <div class="empty-icon">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+  </div>
+  <div class="empty-title">No document loaded yet</div>
+  <div class="empty-desc">Upload a PDF in the sidebar, hit Index Documents, and start asking questions in plain English.</div>
+  <div class="steps-row">
+    <div class="step-card">
+      <div class="step-num">Step 01</div>
+      <div class="step-name">Upload PDF</div>
+      <div class="step-desc">Drop any research paper, report, manual, or contract into the sidebar uploader.</div>
     </div>
-    """, unsafe_allow_html=True)
-    st.info("Upload one or more PDF files in the sidebar and click 'Index Knowledge Base' to launch your query session.")
+    <div class="step-card">
+      <div class="step-num">Step 02</div>
+      <div class="step-name">Index</div>
+      <div class="step-desc">Click Index Documents — your file is split into semantic chunks for fast retrieval.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">Step 03</div>
+      <div class="step-name">Ask anything</div>
+      <div class="step-desc">Type any question. PaperMind finds the right passages and gives a cited answer.</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 else:
-    # Quick Starter Prompt Pills
-    st.markdown("<p style='font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94A3B8; margin-bottom: 8px;'>Suggested Inquiries</p>", unsafe_allow_html=True)
-    p_col1, p_col2, p_col3, p_col4 = st.columns(4)
-    with p_col1:
-        if st.button("Summarize Key Findings", use_container_width=True):
-            st.session_state.pending_prompt = "Provide an executive summary of the key findings, arguments, and conclusions in this document."
-            st.rerun()
-    with p_col2:
-        if st.button("Extract Data & Metrics", use_container_width=True):
-            st.session_state.pending_prompt = "Extract all key metrics, quantitative statistics, and experimental figures mentioned in the document."
-            st.rerun()
-    with p_col3:
-        if st.button("List Actionable Items", use_container_width=True):
-            st.session_state.pending_prompt = "Identify the main recommendations, next steps, and actionable items described in the document."
-            st.rerun()
-    with p_col4:
-        if st.button("Identify Risk Factors", use_container_width=True):
-            st.session_state.pending_prompt = "What are the primary limitations, risks, or potential caveats highlighted by the authors?"
-            st.rerun()
+    # ── Quick-start chips ─────────────────────────────────────────────────────
+    if not st.session_state.messages:
+        st.markdown('<div class="chips-label">Quick actions</div>', unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns(4)
+        chips = [
+            (c1, "Summarize",      "Give me a concise executive summary of this document, covering its key arguments, findings, and conclusions."),
+            (c2, "Key metrics",    "Extract all important numbers, statistics, percentages, dates, and quantitative figures from the document."),
+            (c3, "Action items",   "What are the main recommendations, next steps, or action items described in this document?"),
+            (c4, "Risks & limits", "What limitations, risks, or caveats do the authors highlight?"),
+        ]
+        for col, label, full_query in chips:
+            with col:
+                if st.button(label, use_container_width=True):
+                    st.session_state.pending = full_query
+                    st.rerun()
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+
+    # ── Chat history ──────────────────────────────────────────────────────────
+    for msg in st.session_state.messages:
+        is_user = msg["role"] == "user"
+        avatar  = "You" if is_user else "AI"
+        av_cls  = "user" if is_user else "assistant"
+        bub_cls = "user-bubble" if is_user else "assistant-bubble"
+        role_lbl = "You" if is_user else "PaperMind"
+
+        with st.chat_message(msg["role"]):
+            st.markdown(f"""
+<div class="msg-wrap">
+  <div class="msg-avatar {av_cls}">{avatar}</div>
+  <div class="msg-body">
+    <div class="msg-role">{role_lbl}</div>
+    <div class="msg-bubble {bub_cls}">
+""", unsafe_allow_html=True)
+            st.markdown(msg["content"])
+            st.markdown("</div></div></div>", unsafe_allow_html=True)
+
+            if not is_user and "sources" in msg and msg["sources"]:
+                with st.expander(f"Sources · {len(msg['sources'])} passages"):
+                    st.markdown('<div class="cite-header">Retrieved document passages</div>', unsafe_allow_html=True)
+                    for i, src in enumerate(msg["sources"]):
+                        render_citation(src, i)
 
 
-# ==============================================================================
-# Chat Conversation Stream
-# ==============================================================================
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-        if "sources" in message and message["sources"]:
-            with st.expander(f"Verifiable Document Citations ({len(message['sources'])} Sources)"):
-                for idx, src in enumerate(message["sources"]):
-                    # Extract document name and page if available
-                    match = re.search(r'\[Document: (.*?) - Page (\d+)\]', src)
-                    doc_label = match.group(1) if match else "Document"
-                    page_label = f"Page {match.group(2)}" if match else f"Chunk #{idx+1}"
-                    clean_content = re.sub(r'\[Document: .*? - Page \d+\]\n?', '', src).strip()
-                    
-                    st.markdown(f"""
-                    <div class="citation-card">
-                        <div class="citation-header">
-                            <span class="citation-tag">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                {doc_label}
-                            </span>
-                            <span class="citation-meta">{page_label}</span>
-                        </div>
-                        <div style="font-size: 0.86rem; color: #94A3B8;">{clean_content}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+# ─── Chat input ────────────────────────────────────────────────────────────────
+user_input = st.chat_input("Ask a question about your document…")
 
+if st.session_state.pending:
+    user_input = st.session_state.pending
+    st.session_state.pending = None
 
-# ==============================================================================
-# Query Input & Retrieval Execution
-# ==============================================================================
-user_query = st.chat_input("Query your document knowledge base...")
-
-# Check for pending clicked quick prompt
-if st.session_state.pending_prompt:
-    user_query = st.session_state.pending_prompt
-    st.session_state.pending_prompt = None
-
-if user_query:
+if user_input:
     if not api_key:
-        st.warning("Please supply an API key in the sidebar Control Center to generate grounded responses.")
-    elif not has_documents:
-        st.warning("Please upload and index a PDF document before issuing inquiries.")
+        st.warning("Add your API key in the sidebar to get answers.")
+    elif not has_docs:
+        st.warning("Upload and index a PDF document first.")
     else:
-        # Append & display User Message
-        st.session_state.messages.append({"role": "user", "content": user_query})
-        with st.chat_message("user"):
-            st.markdown(user_query)
+        st.session_state.messages.append({"role": "user", "content": user_input})
 
-        # Retrieve relevant chunks & synthesize
+        with st.chat_message("user"):
+            st.markdown(f"""
+<div class="msg-wrap">
+  <div class="msg-avatar user">You</div>
+  <div class="msg-body">
+    <div class="msg-role">You</div>
+    <div class="msg-bubble user-bubble">{user_input}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
         with st.chat_message("assistant"):
-            with st.spinner("Executing semantic similarity scan & generating grounded synthesis..."):
-                retrieved_chunks = simple_semantic_search(
-                    user_query, 
-                    st.session_state.processed_chunks, 
-                    top_k=top_k
-                )
-                
+            with st.spinner("Thinking…"):
+                retrieved = simple_semantic_search(user_input, st.session_state.chunks, top_k=top_k)
                 try:
-                    answer = generate_rag_response(
-                        user_query, 
-                        retrieved_chunks, 
-                        provider, 
-                        api_key, 
-                        model_name
-                    )
+                    answer = generate_rag_response(user_input, retrieved, provider, api_key, model_name)
+
+                    st.markdown(f"""
+<div class="msg-wrap">
+  <div class="msg-avatar assistant">AI</div>
+  <div class="msg-body">
+    <div class="msg-role">PaperMind</div>
+    <div class="msg-bubble assistant-bubble">
+""", unsafe_allow_html=True)
                     st.markdown(answer)
-                    
-                    if retrieved_chunks:
-                        with st.expander(f"Verifiable Document Citations ({len(retrieved_chunks)} Sources)"):
-                            for idx, src in enumerate(retrieved_chunks):
-                                match = re.search(r'\[Document: (.*?) - Page (\d+)\]', src)
-                                doc_label = match.group(1) if match else "Document"
-                                page_label = f"Page {match.group(2)}" if match else f"Chunk #{idx+1}"
-                                clean_content = re.sub(r'\[Document: .*? - Page \d+\]\n?', '', src).strip()
-                                
-                                st.markdown(f"""
-                                <div class="citation-card">
-                                    <div class="citation-header">
-                                        <span class="citation-tag">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                            {doc_label}
-                                        </span>
-                                        <span class="citation-meta">{page_label}</span>
-                                    </div>
-                                    <div style="font-size: 0.86rem; color: #94A3B8;">{clean_content}</div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                    
+                    st.markdown("</div></div></div>", unsafe_allow_html=True)
+
+                    if retrieved:
+                        with st.expander(f"Sources · {len(retrieved)} passages"):
+                            st.markdown('<div class="cite-header">Retrieved document passages</div>', unsafe_allow_html=True)
+                            for i, src in enumerate(retrieved):
+                                render_citation(src, i)
+
                     st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": answer,
-                        "sources": retrieved_chunks
+                        "role": "assistant", "content": answer, "sources": retrieved
                     })
+
                 except Exception as e:
-                    st.error(f"Inference error encountered: {e}")
+                    st.error(f"Error: {e}")
+
+st.markdown('</div>', unsafe_allow_html=True)
