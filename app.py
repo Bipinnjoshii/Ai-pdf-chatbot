@@ -544,17 +544,36 @@ def fetch_available_gemini_models(api_key):
     if not api_key:
         return defaults
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
+        from google import genai
+        client = genai.Client(api_key=api_key)
         live = []
-        for m in genai.list_models():
-            if "generateContent" in getattr(m, "supported_generation_methods", []):
-                live.append(m.name.replace("models/", ""))
+        for m in client.models.list():
+            name = getattr(m, "name", "").replace("models/", "")
+            if name:
+                live.append(name)
         if live:
             flash = [m for m in live if "flash" in m.lower()]
             pro   = [m for m in live if "pro" in m.lower() and m not in flash]
             rest  = [m for m in live if m not in flash and m not in pro]
-            return flash + pro + rest
+            return (flash + pro + rest)[:10]
+    except Exception:
+        pass
+    try:
+        import requests
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+        res = requests.get(url, timeout=10)
+        if res.status_code == 200:
+            models_data = res.json().get("models", [])
+            live = [
+                m["name"].replace("models/", "")
+                for m in models_data
+                if "generateContent" in m.get("supportedGenerationMethods", [])
+            ]
+            if live:
+                flash = [m for m in live if "flash" in m.lower()]
+                pro   = [m for m in live if "pro" in m.lower() and m not in flash]
+                rest  = [m for m in live if m not in flash and m not in pro]
+                return (flash + pro + rest)[:10]
     except Exception:
         pass
     return defaults
@@ -574,39 +593,77 @@ QUESTION:
 {query}
 """
     if provider == "Google Gemini":
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        fallbacks = [model_name] + [f for f in ["gemini-2.5-flash","gemini-2.0-flash","gemini-1.5-flash-latest","gemini-1.5-flash","gemini-1.5-pro","gemini-pro"] if f != model_name]
-        last_err = None
-        for candidate in fallbacks:
-            try:
-                resp = genai.GenerativeModel(candidate.replace("models/","")).generate_content(prompt)
-                if resp and getattr(resp, "text", None):
-                    return resp.text
-            except Exception as e:
-                last_err = e
-                if any(k in str(e).lower() for k in ["404","not found","not supported","models/"]):
-                    continue
-                raise e
-        # Last-ditch: query live model list
+        candidates = [model_name] + [
+            f for f in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+            if f != model_name
+        ]
+
+        # 1. Official Google GenAI SDK (3.x)
         try:
-            live_models = [m.name.replace("models/","") for m in genai.list_models() if "generateContent" in getattr(m,"supported_generation_methods",[])]
-            for lm in live_models:
+            from google import genai
+            client = genai.Client(api_key=api_key)
+            for cand in candidates:
                 try:
-                    resp = genai.GenerativeModel(lm).generate_content(prompt)
-                    if resp and getattr(resp, "text", None):
+                    cname = cand.replace("models/", "")
+                    resp = client.models.generate_content(model=cname, contents=prompt)
+                    if resp and hasattr(resp, "text") and resp.text:
                         return resp.text
-                except Exception:
-                    continue
+                except Exception as ex:
+                    if any(k in str(ex).lower() for k in ["404", "not found", "not supported", "models/"]):
+                        continue
+                    raise ex
         except Exception:
             pass
-        raise last_err
+
+        # 2. Direct HTTP REST API via requests (zero dependency issues)
+        import requests
+        last_error = None
+        for cand in candidates:
+            cname = cand.replace("models/", "")
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{cname}:generateContent?key={api_key}"
+                payload = {"contents": [{"parts": [{"text": prompt}]}]}
+                res = requests.post(url, json=payload, timeout=40)
+                if res.status_code == 200:
+                    data = res.json()
+                    candidates_out = data.get("candidates", [])
+                    if candidates_out:
+                        parts = candidates_out[0].get("content", {}).get("parts", [])
+                        if parts:
+                            return parts[0].get("text", "")
+                elif res.status_code in (404, 400):
+                    last_error = Exception(f"HTTP {res.status_code}: {res.text}")
+                    continue
+                else:
+                    raise Exception(f"Google API error {res.status_code}: {res.text}")
+            except Exception as e:
+                last_error = e
+                continue
+
+        if last_error:
+            raise last_error
+        return "Failed to retrieve inference from Gemini API."
 
     elif provider == "OpenAI":
-        from langchain.chat_models import ChatOpenAI
-        from langchain.schema import HumanMessage
-        chat = ChatOpenAI(openai_api_key=api_key, model_name=model_name, temperature=0.2)
-        return chat([HumanMessage(content=prompt)]).content
+        try:
+            from langchain.chat_models import ChatOpenAI
+            from langchain.schema import HumanMessage
+            chat = ChatOpenAI(openai_api_key=api_key, model_name=model_name, temperature=0.2)
+            return chat([HumanMessage(content=prompt)]).content
+        except ImportError:
+            import requests
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            payload = {
+                "model": model_name,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=40)
+            if res.status_code == 200:
+                data = res.json()
+                return data["choices"][0]["message"]["content"]
+            raise Exception(f"OpenAI API error {res.status_code}: {res.text}")
 
     return "Provider not configured."
 
