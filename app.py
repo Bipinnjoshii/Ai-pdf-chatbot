@@ -708,15 +708,21 @@ with st.sidebar:
         if provider == "Google Gemini":
             env_key = (os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API")
                        or (st.secrets.get("GEMINI_API_KEY","") if hasattr(st,"secrets") else ""))
-            api_key = st.text_input("Gemini API Key", value=env_key or "", type="password",
-                                    placeholder="AIza…", label_visibility="collapsed")
+            user_key_input = st.text_input("Gemini API Key", value="", type="password",
+                                    placeholder="●●●●●●●● (Configured securely)" if env_key else "Paste Gemini API Key (AIza…)", label_visibility="collapsed")
+            api_key = user_key_input.strip() if user_key_input.strip() else env_key
+            if env_key and not user_key_input:
+                st.markdown("<small style='color: #4ade80; font-size: 0.73rem; display: block; margin: 3px 0 6px;'>✓ Active via secure environment</small>", unsafe_allow_html=True)
             models  = fetch_available_gemini_models(api_key)
             model_name = st.selectbox("Model", models, label_visibility="collapsed")
         else:
             env_key = (os.getenv("OPENAI_API_KEY")
                        or (st.secrets.get("OPENAI_API_KEY","") if hasattr(st,"secrets") else ""))
-            api_key = st.text_input("OpenAI API Key", value=env_key or "", type="password",
-                                    placeholder="sk-…", label_visibility="collapsed")
+            user_key_input = st.text_input("OpenAI API Key", value="", type="password",
+                                    placeholder="●●●●●●●● (Configured securely)" if env_key else "Paste OpenAI Key (sk-…)", label_visibility="collapsed")
+            api_key = user_key_input.strip() if user_key_input.strip() else env_key
+            if env_key and not user_key_input:
+                st.markdown("<small style='color: #4ade80; font-size: 0.73rem; display: block; margin: 3px 0 6px;'>✓ Active via secure environment</small>", unsafe_allow_html=True)
             model_name = st.selectbox("Model", ["gpt-4o-mini","gpt-4o","gpt-3.5-turbo"], label_visibility="collapsed")
 
     st.markdown("<hr style='border:none;border-top:1px solid rgba(255,255,255,0.06);margin:14px 0;'>", unsafe_allow_html=True)
