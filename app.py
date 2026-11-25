@@ -39,7 +39,7 @@ if is_dark:
     --user-bubble-border: rgba(255, 255, 255, 0.1);
     --assistant-bubble-bg: #181920;
     --assistant-bubble-border: rgba(255, 255, 255, 0.08);
-    --chat-input-bg: rgba(24, 25, 32, 0.94);
+    --chat-input-bg: #181920;
     --chat-input-border: rgba(255, 255, 255, 0.12);
     --chat-input-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
     --medallion-bg: #181920;
@@ -105,7 +105,11 @@ p, h1, h2, h3, h4, h5, h6, label, .stMarkdown, .stButton, input, textarea {{
 }}
 
 /* Never override icon fonts so Streamlit Material Symbols render properly */
-[class*="material-symbols"], [class*="material-icons"], [data-testid="stIcon"], i {{
+[class*="material-symbols"],
+[class*="material-icons"],
+[data-testid="stIcon"],
+[data-testid="stIconMaterial"],
+i {{
     font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
 }}
 
@@ -139,57 +143,88 @@ caret-color: #EA580C;
     color: var(--text-primary) !important;
 }}
 
-.main {{
+.main, [data-testid="stMain"] {{
     background: transparent !important;
 }}
+
+/* Align main content and bottom chat container to identical centered measure */
+[data-testid="stMainBlockContainer"],
 .block-container {{
-    padding-top: 1.5rem !important;
-    padding-bottom: 7rem !important;
-    max-width: 880px !important;
+    width: 100% !important;
+    max-width: 860px !important;
+    padding: 0.75rem 1.5rem 1.5rem !important;
+    margin: 0 auto !important;
 }}
 
-/* ── Header & Sidebar Collapsed Control Fixes ── */
-/* Keep header background transparent but never hide it */
+[data-testid="stBottomBlockContainer"] {{
+    width: 100% !important;
+    max-width: 860px !important;
+    padding: 0.5rem 1.5rem 1.25rem !important;
+    margin: 0 auto !important;
+}}
+
+/* ── Header & Sidebar Expand Button Fixes ── */
+/* Keep header and toolbar visible (transparent) so stExpandSidebarButton stays clickable */
 header[data-testid="stHeader"] {{
     background: transparent !important;
     background-color: transparent !important;
+    visibility: visible !important;
+    pointer-events: none !important;
     z-index: 99999 !important;
 }}
 
-/* Hide hamburger menu and deploy button only */
-#MainMenu {{ visibility: hidden !important; }}
-footer {{ visibility: hidden !important; }}
-[data-testid="stToolbar"] {{ visibility: hidden !important; }}
-[data-testid="stDecoration"] {{ display: none !important; }}
-[data-testid="stStatusWidget"] {{ visibility: hidden !important; }}
-
-/* Sidebar collapsed control (chevron button to re-open sidebar when collapsed) */
-[data-testid="stSidebarCollapsedControl"] {{
+[data-testid="stToolbar"] {{
     visibility: visible !important;
     display: flex !important;
+    background: transparent !important;
+    pointer-events: none !important;
+}}
+
+/* Hide only Streamlit menu / deploy clutter, NEVER hide stToolbar or stExpandSidebarButton */
+#MainMenu,
+[data-testid="stMainMenu"],
+[data-testid="stAppDeployButton"],
+[data-testid="stToolbarActions"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+footer {{
+    display: none !important;
+    visibility: hidden !important;
+}}
+
+/* Prominent expand-sidebar chevron button (Streamlit 1.40+ & legacy testids) */
+[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stHeader"] button[aria-label="Expand sidebar"] {{
+    visibility: visible !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
     z-index: 100000 !important;
     background: var(--card-bg) !important;
-    border: 1px solid var(--card-border) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    border: 1.5px solid var(--card-border) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16) !important;
     color: var(--text-primary) !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
     padding: 6px !important;
-    margin-left: 14px !important;
-    margin-top: 12px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }}
-[data-testid="stSidebarCollapsedControl"]:hover {{
+[data-testid="stExpandSidebarButton"]:hover,
+[data-testid="stSidebarCollapsedControl"]:hover,
+[data-testid="stHeader"] button[aria-label="Expand sidebar"]:hover {{
     border-color: #FB923C !important;
-    box-shadow: 0 6px 18px rgba(251, 146, 60, 0.25) !important;
+    box-shadow: 0 6px 18px rgba(251, 146, 60, 0.28) !important;
     transform: scale(1.05) !important;
 }}
-[data-testid="stSidebarCollapsedControl"] button {{
-    color: var(--text-primary) !important;
-    background: transparent !important;
-    border: none !important;
-}}
+[data-testid="stExpandSidebarButton"] span,
+[data-testid="stExpandSidebarButton"] svg,
 [data-testid="stSidebarCollapsedControl"] svg {{
+    color: var(--text-primary) !important;
     fill: var(--text-primary) !important;
     stroke: var(--text-primary) !important;
 }}
@@ -197,21 +232,38 @@ footer {{ visibility: hidden !important; }}
 /* Sidebar collapse button (inside sidebar) */
 [data-testid="stSidebarCollapseButton"] {{
     color: var(--text-primary) !important;
+    opacity: 0.75 !important;
+    transition: opacity 0.2s ease !important;
+}}
+[data-testid="stSidebarCollapseButton"]:hover {{
+    opacity: 1 !important;
 }}
 [data-testid="stSidebarCollapseButton"] button {{
     color: var(--text-primary) !important;
 }}
+[data-testid="stSidebarCollapseButton"] span,
 [data-testid="stSidebarCollapseButton"] svg {{
+    color: var(--text-primary) !important;
     fill: var(--text-primary) !important;
 }}
 
-/* ── Streamlit Bottom Area & Transparency ── */
-[data-testid="stBottom"],
-[data-testid="stBottom"] > div,
-[data-testid="stBottomBlockContainer"],
-.stBottom {{
+/* ── Opaque Bottom Masking Zone (hides scrolled content behind/below typing bar) ── */
+[data-testid="stBottom"] {{
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 999 !important;
     background: transparent !important;
-    background-color: transparent !important;
+}}
+[data-testid="stBottom"] > div {{
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        var(--app-bg) 24px,
+        var(--app-bg) 100%
+    ) !important;
+    padding-top: 16px !important;
     border: none !important;
     box-shadow: none !important;
 }}
@@ -467,12 +519,19 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 [data-testid="stFileUploader"] small {{
     color: var(--text-secondary) !important;
 }}
-[data-testid="stFileUploader"] button {{
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploader"] button *,
+[data-testid="stFileUploader"] button span {{
     background: #16171D !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     color: #FFFFFF !important;
+    fill: #FFFFFF !important;
     border-radius: 10px !important;
     font-weight: 600 !important;
+}}
+[data-testid="stFileUploader"] button * {{
+    background: transparent !important;
+    border: none !important;
 }}
 
 /* ── Buttons ── */
@@ -550,26 +609,19 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     box-shadow: 0 2px 8px rgba(234, 88, 12, 0.45) !important;
 }}
 
-/* ── Main layout ── */
-.main-wrap {{
-    max-width: 840px;
-    margin: 0 auto;
-    padding: 0 12px;
-}}
-
 /* ── Top bar ── */
 .top-bar {{
-    padding: 12px 0 20px;
-    border-bottom: 1px solid var(--sidebar-border);
-    margin-bottom: 24px;
+    padding: 0 0 8px;
+    margin-bottom: 0;
 }}
 .top-title-row {{
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
 }}
 .top-title {{
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.035em;
@@ -577,20 +629,20 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 }}
 .top-sparkle {{
     color: #EA580C;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
 }}
 .top-sub {{
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     color: var(--text-secondary);
-    margin: 3px 0 0;
+    margin: 2px 0 0;
 }}
 .engine-pill {{
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
+    gap: 7px;
+    padding: 5px 12px;
     border-radius: 9999px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.01em;
     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
@@ -619,35 +671,35 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 }}
 @keyframes blink {{ 0%,100%{{opacity:1}} 50%{{opacity:.4}} }}
 
-/* ── Empty state (Refined Ethereal Centerpiece) ── */
+/* ── Empty state (Refined Ethereal Centerpiece, sized to stay cleanly above typing bar) ── */
 .empty-state {{
     text-align: center;
-    padding: 24px 16px 28px;
-    max-width: 760px;
+    padding: 4px 8px 16px;
+    max-width: 780px;
     margin: 0 auto;
 }}
 .hero-chip {{
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 6px 16px;
+    gap: 6px;
+    padding: 5px 14px;
     background: var(--chip-bg);
     border: 1px solid var(--chip-border);
     border-radius: 9999px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #EA580C;
     box-shadow: 0 4px 14px -2px rgba(251, 146, 60, 0.15);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }}
 .hero-orb {{
     position: relative;
-    width: 76px; height: 76px;
-    margin: 0 auto 16px;
+    width: 60px; height: 60px;
+    margin: 0 auto 10px;
     display: flex; align-items: center; justify-content: center;
 }}
 .hero-medallion {{
-    width: 66px; height: 66px;
+    width: 54px; height: 54px;
     background: var(--medallion-bg);
     border: 1px solid var(--medallion-border);
     border-radius: 50%;
@@ -657,32 +709,37 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     z-index: 2;
 }}
 .empty-title {{
-    font-size: 2.1rem;
+    font-size: clamp(1.45rem, 2.5vw, 1.9rem);
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.035em;
-    line-height: 1.25;
-    margin-bottom: 12px;
+    line-height: 1.2;
+    margin-bottom: 8px;
 }}
 .empty-desc {{
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
-    max-width: 540px;
-    margin: 0 auto 32px;
-    line-height: 1.65;
+    max-width: 520px;
+    margin: 0 auto 18px;
+    line-height: 1.5;
 }}
 .steps-row {{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    gap: 12px;
     max-width: 780px;
     margin: 0 auto;
+}}
+@media (max-width: 640px) {{
+    .steps-row {{
+        grid-template-columns: 1fr;
+    }}
 }}
 .step-card {{
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 18px;
-    padding: 20px 16px;
+    border-radius: 16px;
+    padding: 14px 14px;
     text-align: left;
     box-shadow: var(--card-shadow);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -693,24 +750,24 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     border-color: rgba(249, 115, 22, 0.3);
 }}
 .step-num {{
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
     color: #EA580C;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }}
 .step-name {{
-    font-size: 0.94rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     letter-spacing: -0.01em;
 }}
 .step-desc {{
-    font-size: 0.81rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.42;
 }}
 
 /* ── Chips ── */
@@ -826,6 +883,9 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 
 /* ── Floating Chat Input Box ── */
 [data-testid="stChatInput"] {{
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--chat-input-bg) !important;
     background-color: var(--chat-input-bg) !important;
     border: 1px solid var(--chat-input-border) !important;
@@ -1265,15 +1325,13 @@ with st.sidebar:
 # ─── Main area ─────────────────────────────────────────────────────────────────
 has_docs = bool(st.session_state.chunks)
 
-st.markdown('<div class="main-wrap">', unsafe_allow_html=True)
-
 # ─── Top Bar with Title, Status & Quick Theme Switcher ─────────────────────────
 top_left, top_right = st.columns([5, 2])
 with top_left:
     if has_docs:
         pill_text = f"{len(st.session_state.chunks)} chunks ready"
         st.markdown(f"""
-<div class="top-bar" style="border:none; padding: 4px 0 0; margin-bottom: 0;">
+<div class="top-bar" style="border:none; padding: 0; margin-bottom: 0;">
   <div class="top-title-row">
     <h1 class="top-title">PaperMind</h1>
     <span class="top-sparkle">✦</span>
@@ -1284,7 +1342,7 @@ with top_left:
 """, unsafe_allow_html=True)
     else:
         st.markdown("""
-<div class="top-bar" style="border:none; padding: 4px 0 0; margin-bottom: 0;">
+<div class="top-bar" style="border:none; padding: 0; margin-bottom: 0;">
   <div class="top-title-row">
     <h1 class="top-title">PaperMind</h1>
     <span class="top-sparkle">✦</span>
@@ -1295,14 +1353,14 @@ with top_left:
 """, unsafe_allow_html=True)
 
 with top_right:
-    st.markdown('<div class="theme-btn" style="text-align: right; margin-top: 8px;">', unsafe_allow_html=True)
+    st.markdown('<div class="theme-btn" style="text-align: right; margin-top: 4px;">', unsafe_allow_html=True)
     quick_theme_label = "☀️ Light Mode" if is_dark else "🌙 Dark Mode"
     if st.button(quick_theme_label, key="main_theme_btn", use_container_width=True):
         st.session_state.dark_mode_toggle = not is_dark
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<hr style="border:none; border-top:1px solid var(--sidebar-border); margin: 16px 0 24px;">', unsafe_allow_html=True)
+st.markdown('<hr style="border:none; border-top:1px solid var(--sidebar-border); margin: 10px 0 14px;">', unsafe_allow_html=True)
 
 
 # ─── Empty state ───────────────────────────────────────────────────────────────
@@ -1315,7 +1373,7 @@ if not has_docs:
   </div>
   <div class="hero-orb">
     <div class="hero-medallion">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
         <path d="M12 2V6" stroke="#FB923C" stroke-width="2.6" stroke-linecap="round"/>
         <path d="M12 18V22" stroke="#EA580C" stroke-width="2.6" stroke-linecap="round"/>
         <path d="M4.93 4.93L7.76 7.76" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/>
@@ -1475,5 +1533,3 @@ if user_input:
 
                 except Exception as e:
                     st.error(f"Error: {e}")
-
-st.markdown('</div>', unsafe_allow_html=True)
