@@ -15,7 +15,10 @@ st.set_page_config(
 )
 
 # ─── Theme Mode Selection ──────────────────────────────────────────────────────
-is_dark = st.session_state.get("dark_mode_toggle", False)
+if "dark_mode_toggle" not in st.session_state:
+    st.session_state.dark_mode_toggle = False
+
+is_dark = st.session_state.dark_mode_toggle
 
 if is_dark:
     theme_vars = """
@@ -136,9 +139,6 @@ caret-color: #EA580C;
     color: var(--text-primary) !important;
 }}
 
-[data-testid="stHeader"] {{
-    background: transparent !important;
-}}
 .main {{
     background: transparent !important;
 }}
@@ -148,13 +148,68 @@ caret-color: #EA580C;
     max-width: 880px !important;
 }}
 
+/* ── Header & Sidebar Collapsed Control Fixes ── */
+/* Keep header background transparent but never hide it */
+header[data-testid="stHeader"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+    z-index: 99999 !important;
+}}
+
+/* Hide hamburger menu and deploy button only */
+#MainMenu {{ visibility: hidden !important; }}
+footer {{ visibility: hidden !important; }}
+[data-testid="stToolbar"] {{ visibility: hidden !important; }}
+[data-testid="stDecoration"] {{ display: none !important; }}
+[data-testid="stStatusWidget"] {{ visibility: hidden !important; }}
+
+/* Sidebar collapsed control (chevron button to re-open sidebar when collapsed) */
+[data-testid="stSidebarCollapsedControl"] {{
+    visibility: visible !important;
+    display: flex !important;
+    z-index: 100000 !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+    color: var(--text-primary) !important;
+    padding: 6px !important;
+    margin-left: 14px !important;
+    margin-top: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}}
+[data-testid="stSidebarCollapsedControl"]:hover {{
+    border-color: #FB923C !important;
+    box-shadow: 0 6px 18px rgba(251, 146, 60, 0.25) !important;
+    transform: scale(1.05) !important;
+}}
+[data-testid="stSidebarCollapsedControl"] button {{
+    color: var(--text-primary) !important;
+    background: transparent !important;
+    border: none !important;
+}}
+[data-testid="stSidebarCollapsedControl"] svg {{
+    fill: var(--text-primary) !important;
+    stroke: var(--text-primary) !important;
+}}
+
+/* Sidebar collapse button (inside sidebar) */
+[data-testid="stSidebarCollapseButton"] {{
+    color: var(--text-primary) !important;
+}}
+[data-testid="stSidebarCollapseButton"] button {{
+    color: var(--text-primary) !important;
+}}
+[data-testid="stSidebarCollapseButton"] svg {{
+    fill: var(--text-primary) !important;
+}}
+
 /* ── Streamlit Bottom Area & Transparency ── */
 [data-testid="stBottom"],
 [data-testid="stBottom"] > div,
 [data-testid="stBottomBlockContainer"],
-.stBottom,
-footer,
-header {{
+.stBottom {{
     background: transparent !important;
     background-color: transparent !important;
     border: none !important;
@@ -240,22 +295,6 @@ header {{
     margin: 14px 0;
 }}
 
-/* ── Dark mode toggle container ── */
-.theme-switch-wrap {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 20px;
-    background: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid var(--sidebar-border);
-    margin-bottom: 6px;
-}}
-[data-testid="stSidebar"] [data-testid="stCheckbox"] span {{
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    color: var(--text-secondary) !important;
-}}
-
 /* ── Stat row ── */
 .stat-row {{
     display: grid;
@@ -310,11 +349,13 @@ header {{
 .doc-badge svg {{ flex-shrink: 0; }}
 
 /* ── Unified Polished Dark Sidebar Inputs (API Key, Selectbox, Password) ── */
+[data-testid="stSidebar"] [data-testid="stTextInput"],
+[data-testid="stSidebar"] [data-testid="stTextInput"] > div,
 [data-testid="stSidebar"] [data-testid="stTextInput"] > div > div,
 [data-testid="stSidebar"] [data-baseweb="input"],
 [data-testid="stSidebar"] [data-baseweb="base-input"] {{
     background-color: #16171D !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     border-radius: 12px !important;
     overflow: hidden !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
@@ -352,9 +393,10 @@ header {{
 }}
 
 /* BaseWeb Select dropdowns in sidebar */
+[data-testid="stSidebar"] [data-baseweb="select"],
 [data-testid="stSidebar"] [data-baseweb="select"] > div {{
     background-color: #16171D !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     border-radius: 12px !important;
     color: #FFFFFF !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
@@ -373,7 +415,7 @@ div[data-baseweb="popover"], div[data-baseweb="menu"] {{
     background-color: #16171D !important;
     border-radius: 12px !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
 }}
 li[role="option"] {{
     color: #FFFFFF !important;
@@ -466,6 +508,23 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     transform: translateY(-1px) !important;
 }}
 
+/* ── Theme Button (High Contrast & Visible in Light/Dark) ── */
+.theme-btn > button {{
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1.5px solid var(--card-border) !important;
+    border-radius: 12px !important;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    padding: 8px 14px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}}
+.theme-btn > button:hover {{
+    border-color: #FB923C !important;
+    color: #EA580C !important;
+    box-shadow: 0 4px 14px rgba(251, 146, 60, 0.2) !important;
+}}
+
 /* ── Expander ── */
 [data-testid="stExpander"] {{
     background: var(--card-bg) !important;
@@ -500,10 +559,7 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 
 /* ── Top bar ── */
 .top-bar {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 0 20px;
+    padding: 12px 0 20px;
     border-bottom: 1px solid var(--sidebar-border);
     margin-bottom: 24px;
 }}
@@ -532,7 +588,7 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 16px;
+    padding: 6px 14px;
     border-radius: 9999px;
     font-size: 0.78rem;
     font-weight: 600;
@@ -566,7 +622,7 @@ li[role="option"]:hover, li[aria-selected="true"] {{
 /* ── Empty state (Refined Ethereal Centerpiece) ── */
 .empty-state {{
     text-align: center;
-    padding: 36px 16px 28px;
+    padding: 24px 16px 28px;
     max-width: 760px;
     margin: 0 auto;
 }}
@@ -845,9 +901,6 @@ li[role="option"]:hover, li[aria-selected="true"] {{
     border-radius: 12px !important;
     color: #FB923C !important;
 }}
-
-/* Hide Streamlit branding */
-#MainMenu, footer, header {{ visibility: hidden; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1098,9 +1151,12 @@ with st.sidebar:
 </div>
 """, unsafe_allow_html=True)
 
-    # Dark Mode Toggle
-    st.markdown('<div style="padding: 2px 20px 8px;">', unsafe_allow_html=True)
-    mode_toggle = st.toggle("🌙 Dark Mode", value=is_dark, key="dark_mode_toggle")
+    # Theme Toggle Button (Clear, prominent, impossible to miss)
+    st.markdown('<div class="theme-btn" style="padding: 4px 18px 10px;">', unsafe_allow_html=True)
+    sb_theme_label = "☀️ Switch to Light Mode" if is_dark else "🌙 Switch to Dark Mode"
+    if st.button(sb_theme_label, use_container_width=True, key="sidebar_theme_btn"):
+        st.session_state.dark_mode_toggle = not is_dark
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
@@ -1211,26 +1267,42 @@ has_docs = bool(st.session_state.chunks)
 
 st.markdown('<div class="main-wrap">', unsafe_allow_html=True)
 
-if has_docs:
-    pill_class = "active"
-    dot_class  = "active"
-    pill_text  = f"{len(st.session_state.chunks)} chunks indexed"
-
-    st.markdown(f"""
-<div class="top-bar">
-  <div class="top-bar-left">
-    <div class="top-title-row">
-      <h1 class="top-title">PaperMind</h1>
-      <span class="top-sparkle">✦</span>
-    </div>
-    <p class="top-sub">Ask complex questions across your documents with cited evidence</p>
+# ─── Top Bar with Title, Status & Quick Theme Switcher ─────────────────────────
+top_left, top_right = st.columns([5, 2])
+with top_left:
+    if has_docs:
+        pill_text = f"{len(st.session_state.chunks)} chunks ready"
+        st.markdown(f"""
+<div class="top-bar" style="border:none; padding: 4px 0 0; margin-bottom: 0;">
+  <div class="top-title-row">
+    <h1 class="top-title">PaperMind</h1>
+    <span class="top-sparkle">✦</span>
+    <span class="engine-pill active" style="margin-left: 10px;"><span class="pill-dot active"></span>{pill_text}</span>
   </div>
-  <div class="engine-pill {pill_class}">
-    <div class="pill-dot {dot_class}"></div>
-    <span>{pill_text}</span>
-  </div>
+  <p class="top-sub">Ask complex questions across your documents with cited evidence</p>
 </div>
 """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+<div class="top-bar" style="border:none; padding: 4px 0 0; margin-bottom: 0;">
+  <div class="top-title-row">
+    <h1 class="top-title">PaperMind</h1>
+    <span class="top-sparkle">✦</span>
+    <span class="engine-pill idle" style="margin-left: 10px;"><span class="pill-dot idle"></span>No document loaded</span>
+  </div>
+  <p class="top-sub">Document Intelligence Studio</p>
+</div>
+""", unsafe_allow_html=True)
+
+with top_right:
+    st.markdown('<div class="theme-btn" style="text-align: right; margin-top: 8px;">', unsafe_allow_html=True)
+    quick_theme_label = "☀️ Light Mode" if is_dark else "🌙 Dark Mode"
+    if st.button(quick_theme_label, key="main_theme_btn", use_container_width=True):
+        st.session_state.dark_mode_toggle = not is_dark
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<hr style="border:none; border-top:1px solid var(--sidebar-border); margin: 16px 0 24px;">', unsafe_allow_html=True)
 
 
 # ─── Empty state ───────────────────────────────────────────────────────────────
