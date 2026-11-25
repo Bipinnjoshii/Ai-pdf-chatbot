@@ -1325,42 +1325,24 @@ with st.sidebar:
 # ─── Main area ─────────────────────────────────────────────────────────────────
 has_docs = bool(st.session_state.chunks)
 
-# ─── Top Bar with Title, Status & Quick Theme Switcher ─────────────────────────
-top_left, top_right = st.columns([5, 2])
-with top_left:
-    if has_docs:
-        pill_text = f"{len(st.session_state.chunks)} chunks ready"
-        st.markdown(f"""
-<div class="top-bar" style="border:none; padding: 0; margin-bottom: 0;">
-  <div class="top-title-row">
-    <h1 class="top-title">PaperMind</h1>
-    <span class="top-sparkle">✦</span>
-    <span class="engine-pill active" style="margin-left: 10px;"><span class="pill-dot active"></span>{pill_text}</span>
+# ─── Top Bar with Title & Status ────────────────────────────────────────────────
+pill_class = "active" if has_docs else "idle"
+dot_class  = "active" if has_docs else "idle"
+pill_text  = f"{len(st.session_state.chunks)} chunks ready" if has_docs else "No document loaded"
+sub_text   = "Ask complex questions across your documents with cited evidence" if has_docs else "Document Intelligence Studio"
+
+st.markdown(f"""
+<div class="top-bar" style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--sidebar-border); padding:0 0 12px; margin-bottom:14px;">
+  <div>
+    <div class="top-title-row">
+      <h1 class="top-title">PaperMind</h1>
+      <span class="top-sparkle">✦</span>
+    </div>
+    <p class="top-sub">{sub_text}</p>
   </div>
-  <p class="top-sub">Ask complex questions across your documents with cited evidence</p>
+  <div class="engine-pill {pill_class}"><span class="pill-dot {dot_class}"></span><span>{pill_text}</span></div>
 </div>
 """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-<div class="top-bar" style="border:none; padding: 0; margin-bottom: 0;">
-  <div class="top-title-row">
-    <h1 class="top-title">PaperMind</h1>
-    <span class="top-sparkle">✦</span>
-    <span class="engine-pill idle" style="margin-left: 10px;"><span class="pill-dot idle"></span>No document loaded</span>
-  </div>
-  <p class="top-sub">Document Intelligence Studio</p>
-</div>
-""", unsafe_allow_html=True)
-
-with top_right:
-    st.markdown('<div class="theme-btn" style="text-align: right; margin-top: 4px;">', unsafe_allow_html=True)
-    quick_theme_label = "☀️ Light Mode" if is_dark else "🌙 Dark Mode"
-    if st.button(quick_theme_label, key="main_theme_btn", use_container_width=True):
-        st.session_state.dark_mode_toggle = not is_dark
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('<hr style="border:none; border-top:1px solid var(--sidebar-border); margin: 10px 0 14px;">', unsafe_allow_html=True)
 
 
 # ─── Empty state ───────────────────────────────────────────────────────────────
